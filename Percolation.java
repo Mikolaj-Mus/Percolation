@@ -4,28 +4,76 @@
  *  Last modified:     October 16, 1842
  **************************************************************************** */
 
+import edu.princeton.cs.algs4.WeightedQuickUnionUF;
+
 public class Percolation {
+    private static final int TOP = 0;
     private boolean grid[][];
-    private boolean[][] visited;
+    private final boolean[][] opened;
+    private final int size;
+    private final int bottom;
+    private int openSites;
+    private final WeightedQuickUnionUF qf;
+
 
     // tworzy siatkę n na n, z wszystkimi miejscami na początku zablokowanymi
     public Percolation(int n) {
-        grid = new boolean[n][n];
-        visited = new boolean[n][n];
 
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                grid[i][j] = false;
-            }
+        if (n <= 0) {
+            throw new IllegalArgumentException();
         }
+
+        size = n;
+        bottom = size * size + 1;
+        // ostatni element tablicy oznaczajacy dol jeden wiekszy od ostatniego w tablicy
+        qf = new WeightedQuickUnionUF(size * size + 2);
+        // ilosc pol do przeszukania
+        opened = new boolean[size][size];
+        openSites = 0;
     }
 
 
     // otwiera miejsce (wiersz, kolumna), jeśli nie jest już otwarte
     public void open(int row, int col) {
-        if (!grid[row][col]) {
-            grid[row][col] = true;
+        checkException(row, col);
+
+        opened[row - 1][col - 1] = true; // otwarcie miejsca
+        ++openSites;
+
+        if (row == 1) {
+            qf.union(getQuickFindIndex(row, col), TOP);
         }
+
+        if (row == size) {
+            qf.union(getQuickFindIndex(row, col), bottom);
+        }
+
+        if (row > 1 && isOpen(row - 1, col)) {
+            qf.union(getQuickFindIndex(row, col), getQuickFindIndex(row - 1, col));
+        }
+
+        if (row < size && isOpen(row + 1, col)) {
+            qf.union(getQuickFindIndex(row, col), getQuickFindIndex(row + 1, col));
+        }
+
+        if (col > 1 && isOpen(row, col - 1)) {
+            qf.union(getQuickFindIndex(row, col), getQuickFindIndex(row, col - 1));
+        }
+
+        if (col < size && isOpen(row, col + 1)) {
+            qf.union(getQuickFindIndex(row, col), getQuickFindIndex(row, col + 1));
+        }
+    }
+
+    private void checkException(int row, int col) {
+        if (row <= 0 || row > size || col <= 0 || col > size) {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    // zwraca numer indexu jakby to byla jedna tablica jednowymiarowa
+    private int getQuickFindIndex(int row, int col) {
+        return size * (row - 1) + col;
     }
 
     // czy miejsce (wiersz, kolumna) jest otwarte?
@@ -34,31 +82,9 @@ public class Percolation {
     }
 
     // czy miejsce (wiersz, kolumna) jest pełne?
-    public boolean isFull(int row, int col) {
-
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                visited[i][j] = grid[i][j];
-            }
-        }
-        // Sprawdzamy warunki brzegowe
-        if (!isValidIndex(row, col) || !isOpen(row, col) || visited[row][col]) {
-            return false;
-        }
-
-        visited[row][col] = true;  // oznaczamy pole jako odwiedzone
-
-        // Sprawdzamy, czy bieżące pole jest w pierwszym rzędzie
-        if (row == 0) {
-            return true;
-        }
-
-        // Rekurencyjnie sprawdzamy połączenia dla sąsiednich pól
-        return isFull(row - 1, col)  // góra
-                || isFull(row + 1, col)  // dół
-                || isFull(row, col - 1)  // lewo
-                || isFull(row, col + 1);  // prawo
-    }
+    // public boolean isFull(int row, int col) {
+    //
+    // }
 
 
     // zwraca liczbę otwartych miejsc
@@ -69,9 +95,6 @@ public class Percolation {
 
     // testowy klient (opcjonalny)
 
-    public boolean isValidIndex(int row, int col) {
-        return row >= 0 && row < grid.length && col >= 0 && col < grid.length;
-    }
 
     public void print(boolean[][] grid) {
 
@@ -98,7 +121,7 @@ public class Percolation {
         p1.open(1, 8);
         p1.open(0, 8);
         p1.print(p1.grid);
-        System.out.println(p1.isFull(2, 8));
+        // System.out.println(p1.isFull(2, 8));
     }
 
 }
