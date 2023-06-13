@@ -8,7 +8,6 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
     private static final int TOP = 0;
-    private boolean grid[][];
     private final boolean[][] opened;
     private final int size;
     private final int bottom;
@@ -68,7 +67,7 @@ public class Percolation {
     private void checkException(int row, int col) {
         if (row <= 0 || row > size || col <= 0 || col > size) {
             throw new IllegalArgumentException();
-        }
+        } // sprawdza czy pole znajduje sie w siatce
     }
 
     // zwraca numer indexu jakby to byla jedna tablica jednowymiarowa
@@ -78,22 +77,31 @@ public class Percolation {
 
     // czy miejsce (wiersz, kolumna) jest otwarte?
     public boolean isOpen(int row, int col) {
-        return grid[row][col];
+        checkException(row, col);
+        return opened[row - 1][col - 1];
+        // sprawdza czy miejsce jest otwarte
     }
 
     // czy miejsce (wiersz, kolumna) jest pełne?
-    // public boolean isFull(int row, int col) {
-    //
-    // }
+    public boolean isFull(int row, int col) {
+
+        if ((row > 0 && row <= size) && (col > 0 && col <= size)) {
+            return qf.find(TOP) == qf.find(getQuickFindIndex(row, col));
+            // sprawdza polaczenie miedzy top a danym polem
+        }
+        else throw new IllegalArgumentException();
+    }
 
 
     // zwraca liczbę otwartych miejsc
-    // public int numberOfOpenSites()
+    public int numberOfOpenSites() {
+        return openSites;
+    }
 
     // czy system przepuszcza?
-    // public boolean percolates(){}
-
-    // testowy klient (opcjonalny)
+    public boolean percolates() {
+        return qf.find(TOP) == qf.find(bottom);
+    } // jezeli system podlaczony jest od top do bottom to przepuszcza
 
 
     public void print(boolean[][] grid) {
@@ -111,17 +119,6 @@ public class Percolation {
         }
         System.out.println();
         System.out.println();
-    }
-
-    public static void main(String[] args) {
-
-        Percolation p1 = new Percolation(20);
-
-        p1.open(2, 8);
-        p1.open(1, 8);
-        p1.open(0, 8);
-        p1.print(p1.grid);
-        // System.out.println(p1.isFull(2, 8));
     }
 
 }
